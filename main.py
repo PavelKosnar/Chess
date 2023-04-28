@@ -18,6 +18,7 @@ class Game:
         self.highlighted_fields = None
         self.possible_moves = None
         self.turns = 0
+        self.turn_history = {}
 
         self.board = Board(self)
         self.figures = Figures(self)
