@@ -58,6 +58,20 @@ class Game:
         else:
             return 'black'
 
+    @property
+    def check(self):
+        checks = {'white': False, 'black': False}
+        danger_tiles = self.board.danger_tiles
+        for figure in self.figures.figures_list:
+            if figure.figure == 'king':
+                if figure.get_pos in danger_tiles.get(figure.color):
+                    checks.update({figure.color: True})
+
+        return checks
+
+    def check_mate(self):
+        pass
+
     def draw(self):
         self.board.draw(self.highlighted_fields, self.possible_moves, self.mouse_map_pos)
 

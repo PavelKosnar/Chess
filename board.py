@@ -67,7 +67,7 @@ class Board:
         black_moves = []
         for figure in self.game.figures.figures_list:
             possible_moves = figure.get_dangerous_moves
-            if possible_moves is not None and possible_moves != (None, None):
+            if possible_moves:
                 for pos in possible_moves:
                     if figure.color == 'white':
                         white_moves.append(pos)
@@ -75,3 +75,11 @@ class Board:
                         black_moves.append(pos)
 
         return {'white': black_moves, 'black': white_moves}
+
+    @property
+    def danger_tiles_by_pos(self):
+        tiles = {'white': {}, 'black': {}}
+        for figure in self.game.figures.figures_list:
+            tiles[figure.color].update({figure.get_pos: figure.get_dangerous_moves})
+
+        return tiles

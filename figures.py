@@ -48,12 +48,20 @@ class Figure:
 
     def move(self, pos):
         previous_pos = self.row, self.col
+        self.row, self.col = pos
+
         self.figures_map.update({pos: self.color})
         self.figures_map.pop(previous_pos)
-        self.row, self.col = pos
+
+        if self.game.check.get(self.color) and not self.king_save:
+            self.row, self.col = previous_pos
+            self.figures_map.update({previous_pos: self.color})
+            self.figures_map.pop(pos)
+            return
+
         if self.start_pos:
             self.start_pos = False
-        self.check_collision()
+        self.kill_figure(self.collision)
         self.img_rect = self.image.get_rect(center=(FRAME_SIZE + self.col * FIELD_SIZE + FIELD_SIZE / 2,
                                                     FRAME_SIZE + self.row * FIELD_SIZE + FIELD_SIZE / 2))
         self.rect = pg.rect.Rect(self.col * FIELD_SIZE + FRAME_SIZE, self.row * FIELD_SIZE + FRAME_SIZE,
@@ -72,13 +80,37 @@ class Figure:
                              f' ->{self.game.board.letters[self.col]}{self.game.board.nums[-self.row - 1]}'
         })
 
-    def check_collision(self):
+    @property
+    def collision(self):
         for figure in self.game.figures.figures_list:
             if figure.get_pos == self.get_pos and figure.color != self.color:
-                index = [i for i in self.game.figures.figures_list].index(figure)
-                self.game.figures.figures_list.pop(index)
-                if self.figures_map.get(self.get_pos) != self.color:
-                    self.figures_map.pop(self.get_pos)
+                return figure
+        return False
+
+    @property
+    def king_save(self):
+        if not self.collision:
+            return False
+        danger_tiles_by_pos = self.game.board.danger_tiles_by_pos
+        danger_tiles = []
+        for pos in danger_tiles_by_pos.get(self.color):
+            if pos == self.get_pos:
+                continue
+            for i in danger_tiles_by_pos.get(self.color).get(pos):
+                danger_tiles.append(i) if i not in danger_tiles else None
+        for figure in self.game.figures.figures_list:
+            if figure.figure == 'king' and figure.color == self.color:
+                if figure.get_pos not in danger_tiles:
+                    return True
+        return False
+
+    def kill_figure(self, figure):
+        if figure:
+            index = self.game.figures.figures_list.index(figure)
+            self.game.figures.figures_list.pop(index)
+            if self.figures_map.get(self.get_pos) != self.color:
+                self.figures_map.pop(self.get_pos)
+                print('SDHFPHSDFIPHHEWFHDKSLFHSDFOPEUIOWEHJFK WFJEO FPWE FHIWEHF WEFH OWEHF WEOFP')
 
     def castling(self, pos):
         for figure in self.game.figures.figures_list:
