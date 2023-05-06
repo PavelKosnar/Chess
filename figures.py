@@ -46,32 +46,41 @@ class Figure:
                                  FIELD_SIZE, FIELD_SIZE)
         self.highlighted = False
 
-    def move(self, pos):
+    def move(self, pos, test=False, figure=None):
         previous_pos = self.row, self.col
         self.row, self.col = pos
 
         self.figures_map.update({pos: self.color})
         self.figures_map.pop(previous_pos)
 
-        if self.game.check.get(self.color) and not self.king_save:
+        if test and figure:
+            new_figure_moves = figure.get_dangerous_moves
+            self.row, self.col = previous_pos
+            self.figures_map.update({previous_pos: self.color})
+            self.figures_map.pop(pos)
+            return new_figure_moves
+
+        if self.game.check == self.color and not self.king_save():
             self.row, self.col = previous_pos
             self.figures_map.update({previous_pos: self.color})
             self.figures_map.pop(pos)
             return
 
-        if self.start_pos:
-            self.start_pos = False
         self.kill_figure(self.collision)
+
         self.img_rect = self.image.get_rect(center=(FRAME_SIZE + self.col * FIELD_SIZE + FIELD_SIZE / 2,
                                                     FRAME_SIZE + self.row * FIELD_SIZE + FIELD_SIZE / 2))
         self.rect = pg.rect.Rect(self.col * FIELD_SIZE + FRAME_SIZE, self.row * FIELD_SIZE + FRAME_SIZE,
                                  FIELD_SIZE, FIELD_SIZE)
 
-        if self.figure == 'king' and self.row in [0, 7] and self.col in [2, 6]:
+        if self.figure == 'king' and self.row in [0, 7] and self.col in [2, 6] and self.start_pos:
             self.castling((self.row, 7 if self.col == 6 else 0))
             return
-        elif self.row in [0, 7] and self.figure == 'pawn':
+        if self.figure == 'pawn' and self.row in [0, 7]:
             self.upgrade_to_queen()
+
+        if self.start_pos:
+            self.start_pos = False
 
         self.game.turns += 1
 
@@ -87,9 +96,8 @@ class Figure:
                 return figure
         return False
 
-    @property
-    def king_save(self):
-        if not self.collision:
+    def king_save(self, move=True):
+        if not self.collision and move:
             return False
         danger_tiles_by_pos = self.game.board.danger_tiles_by_pos
         danger_tiles = []
@@ -99,9 +107,8 @@ class Figure:
             for i in danger_tiles_by_pos.get(self.color).get(pos):
                 danger_tiles.append(i) if i not in danger_tiles else None
         for figure in self.game.figures.figures_list:
-            if figure.figure == 'king' and figure.color == self.color:
-                if figure.get_pos not in danger_tiles:
-                    return True
+            if figure.figure == 'king' and figure.color == self.color and figure.get_pos not in danger_tiles:
+                return True
         return False
 
     def kill_figure(self, figure):
@@ -110,7 +117,8 @@ class Figure:
             self.game.figures.figures_list.pop(index)
             if self.figures_map.get(self.get_pos) != self.color:
                 self.figures_map.pop(self.get_pos)
-                print('SDHFPHSDFIPHHEWFHDKSLFHSDFOPEUIOWEHJFK WFJEO FPWE FHIWEHF WEFH OWEHF WEOFP')
+            if self.game.check:
+                return
 
     def castling(self, pos):
         for figure in self.game.figures.figures_list:

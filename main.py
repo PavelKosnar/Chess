@@ -17,6 +17,7 @@ class Game:
 
         self.highlighted_fields = None
         self.possible_moves = None
+        self.check_tile = None
         self.turns = 0
         self.turn_history = {}
 
@@ -60,17 +61,49 @@ class Game:
 
     @property
     def check(self):
-        checks = {'white': False, 'black': False}
+        check_color = None
         danger_tiles = self.board.danger_tiles
         for figure in self.figures.figures_list:
             if figure.figure == 'king':
                 if figure.get_pos in danger_tiles.get(figure.color):
-                    checks.update({figure.color: True})
+                    self.check_tile = figure.get_pos
+                    self.checkmate(figure)
+                    check_color = figure.color
+                    break
+        if not check_color:
+            self.check_tile = None
 
-        return checks
+        return check_color
 
-    def check_mate(self):
-        pass
+    def checkmate(self, king):
+        if king.get_possible_moves:
+            return
+
+        attacking_tile = False
+        attacking_figure = False
+        danger_tiles_by_pos = self.board.danger_tiles_by_pos
+
+        for color in danger_tiles_by_pos:
+            if color == king.color:
+                continue
+            for pos in danger_tiles_by_pos.get(color):
+                if king.get_pos in danger_tiles_by_pos.get(color).get(pos):
+                    attacking_tile = pos
+
+        for figure in self.figures.figures_list:
+            if figure.get_pos == attacking_tile:
+                attacking_figure = figure
+
+        for figure in self.figures.figures_list:
+            if figure.color != king.color:
+                continue
+            for pos in figure.get_possible_moves:
+                if pos == attacking_tile:
+                    return
+                if king.get_pos not in figure.move(pos=pos, test=True, figure=attacking_figure):
+                    return
+
+        print('Checkmate')
 
     def draw(self):
         self.board.draw(self.highlighted_fields, self.possible_moves, self.mouse_map_pos)

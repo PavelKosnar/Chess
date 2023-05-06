@@ -46,6 +46,11 @@ class Board:
                                                           FIELD_SIZE, FIELD_SIZE))
                     continue
 
+                if (col, row) == self.game.check_tile:
+                    pg.draw.rect(self.screen, '#ff6f6f', (row * FIELD_SIZE + FRAME_SIZE, col * FIELD_SIZE + FRAME_SIZE,
+                                                          FIELD_SIZE, FIELD_SIZE))
+                    continue
+
                 if field == 1:
                     pg.draw.rect(self.screen, '#d18b47', (row * FIELD_SIZE + FRAME_SIZE, col * FIELD_SIZE + FRAME_SIZE,
                                                           FIELD_SIZE, FIELD_SIZE))
